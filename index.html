@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家长答疑考核评分系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0f14;
+    --bg-card: #1a1f2b;
+    --bg-input: #12161e;
+    --fg: #e8e6e1;
+    --fg-muted: #7a7d85;
+    --fg-dim: #4a4d55;
+    --accent: #e8a849;
+    --accent-glow: rgba(232, 168, 73, 0.15);
+    --accent-deep: #c4872e;
+    --success: #4ade80;
+    --success-glow: rgba(74, 222, 128, 0.12);
+    --danger: #f87171;
+    --danger-glow: rgba(248, 113, 113, 0.1);
+    --border: rgba(255,255,255,0.06);
+    --border-focus: rgba(232, 168, 73, 0.4);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+  }
+  .bg-atmosphere { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+  .bg-atmosphere .orb { position: absolute; border-radius: 50%; filter: blur(120px); }
+  .bg-atmosphere .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(232,168,73,0.08), transparent 70%); top: -10%; right: -5%; }
+  .bg-atmosphere .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, rgba(196,135,46,0.06), transparent 70%); bottom: -10%; left: -5%; }
+  .bg-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px); background-size: 60px 60px; }
+  .app-container { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 32px 24px 60px; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .top-bar .logo-area { display: flex; align-items: center; gap: 14px; }
+  .top-bar .logo-icon { width: 46px; height: 46px; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; box-shadow: 0 4px 16px rgba(232,168,73,0.25); }
+  .top-bar .logo-text { font-size: 20px; font-weight: 700; }
+  .top-bar .logo-text span { color: var(--accent); }
+  .top-bar .badge { padding: 6px 14px; background: var(--accent-glow); border: 1px solid rgba(232,168,73,0.2); border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--accent); }
+  .persona-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 32px; display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; position: relative; overflow: hidden; }
+  .persona-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(180deg, var(--accent), var(--accent-deep)); }
+  .persona-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #2a2f3b, #1e2330); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 28px; color: var(--accent); flex-shrink: 0; }
+  .persona-info h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .persona-info h3 .tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 12px; background: rgba(232,168,73,0.12); color: var(--accent); border: 1px solid rgba(232,168,73,0.15); }
+  .persona-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .persona-tags span { padding: 4px 12px; border-radius: 6px; font-size: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--fg-muted); }
+  .persona-desc { font-size: 13px; line-height: 1.7; color: var(--fg-muted); }
+  .persona-mindset { background: rgba(232,168,73,0.05); border: 1px solid rgba(232,168,73,0.1); border-radius: var(--radius-sm); padding: 16px 20px; min-width: 240px; }
+  .persona-mindset h4 { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; letter-spacing: 0.05em; }
+  .persona-mindset ul { list-style: none; font-size: 12px; line-height: 1.8; color: var(--fg-muted); }
+  .persona-mindset ul li::before { content: '▸ '; color: var(--accent); font-weight: 700; }
+  .qa-section { display: flex; flex-direction: column; gap: 24px; margin-bottom: 36px; }
+  .qa-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .qa-header { padding: 20px 28px; display: flex; align-items: flex-start; gap: 16px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.01); }
+  .qa-number { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; flex-shrink: 0; margin-top: 2px; }
+  .qa-question { flex: 1; }
+  .qa-question .label { font-size: 11px; font-weight: 500; color: var(--fg-dim); letter-spacing: 0.06em; margin-bottom: 6px; }
+  .qa-question .text { font-size: 15px; font-weight: 500; line-height: 1.6; }
+  .qa-question .scene { margin-top: 8px; padding: 8px 14px; border-radius: 6px; background: rgba(255,255,255,0.02); border-left: 2px solid var(--fg-dim); font-size: 12px; color: var(--fg-muted); line-height: 1.6; }
+  .qa-question .focus-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .qa-question .focus-tags span { padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 500; background: rgba(232,168,73,0.08); color: var(--accent); border: 1px solid rgba(232,168,73,0.12); }
+  .qa-body { padding: 20px 28px; }
+  .qa-body label { display: block; font-size: 12px; font-weight: 500; color: var(--fg-muted); margin-bottom: 10px; }
+  .qa-body textarea { width: 100%; min-height: 150px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; font-family: inherit; font-size: 14px; line-height: 1.7; color: var(--fg); resize: vertical; outline: none; }
+  .qa-body textarea:focus { border-color: var(--border-focus); }
+  .qa-body textarea::placeholder { color: var(--fg-dim); }
+  .qa-body .char-count { text-align: right; font-size: 11px; color: var(--fg-dim); margin-top: 6px; }
+  .submit-area { text-align: center; margin-bottom: 40px; }
+  .btn-submit { display: inline-flex; align-items: center; gap: 10px; padding: 16px 48px; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); border: none; border-radius: 12px; font-family: inherit; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; box-shadow: 0 4px 24px rgba(232,168,73,0.3); }
+  .btn-submit:hover { box-shadow: 0 8px 32px rgba(232,168,73,0.4); }
+  .submit-hint { font-size: 12px; color: var(--fg-dim); margin-top: 12px; }
+  #inlineAlert { display: none; text-align: center; margin-bottom: 20px; padding: 14px 24px; border-radius: 10px; background: var(--danger-glow); border: 1px solid rgba(248,113,113,0.2); font-size: 14px; font-weight: 500; color: var(--danger); }
+  .total-score-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 40px; display: flex; align-items: center; gap: 40px; position: relative; overflow: hidden; }
+  .total-score-card::after { content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-glow), transparent 70%); pointer-events: none; }
+  .score-ring-wrapper { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
+  .score-ring-wrapper svg { transform: rotate(-90deg); }
+  .score-ring-bg { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
+  .score-ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.5s ease, stroke 0.5s; }
+  .score-ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-ring-text .num { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 900; line-height: 1; }
+  .score-ring-text .unit { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
+  .total-info { flex: 1; position: relative; z-index: 1; }
+  .total-info .level-badge { display: inline-block; padding: 5px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+  .total-info h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+  .total-info p { font-size: 14px; line-height: 1.7; color: var(--fg-muted); }
+  .result-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .result-card-header { padding: 20px 28px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .result-card-header:hover { background: rgba(255,255,255,0.02); }
+  .result-card-header .q-num { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; flex-shrink: 0; }
+  .result-card-header .q-title { flex: 1; font-size: 14px; font-weight: 500; }
+  .result-card-header .q-score { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 900; margin-right: 12px; }
+  .result-card-header .q-score span { font-family: 'Noto Sans SC', sans-serif; font-size: 13px; font-weight: 400; color: var(--fg-muted); }
+  .result-card-header .toggle-icon { color: var(--fg-dim); transition: transform 0.3s; font-size: 12px; }
+  .result-card.open .toggle-icon { transform: rotate(180deg); }
+  .result-card-body { display: none; }
+  .result-card.open .result-card-body { display: block; }
+  .result-card-content { padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .dimension-row { display: flex; flex-direction: column; gap: 10px; }
+  .dimension-row .dim-label { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+  .dimension-row .dim-label .name { font-weight: 500; color: var(--fg-muted); }
+  .dimension-row .dim-label .val { font-weight: 700; font-size: 13px; }
+  .dim-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .dim-bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s ease; width: 0; }
+  .feedback-box { padding: 16px 20px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.8; }
+  .feedback-box.good { background: var(--success-glow); border: 1px solid rgba(74,222,128,0.15); color: var(--success); }
+  .feedback-box.bad { background: var(--danger-glow); border: 1px solid rgba(248,113,113,0.15); color: var(--danger); }
+  .feedback-box .fb-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .parent-reaction { padding: 16px 20px; border-radius: var(--radius-sm); background: rgba(232,168,73,0.06); border: 1px solid rgba(232,168,73,0.12); }
+  .parent-reaction .pr-title { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .parent-reaction .pr-text { font-size: 13px; line-height: 1.8; color: var(--fg-muted); font-style: italic; }
+  .reset-area { text-align: center; margin-top: 20px; }
+  .btn-reset { display: inline-flex; align-items: center; gap: 8px; padding: 12px 32px; background: transparent; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 14px; font-weight: 500; color: var(--fg-muted); cursor: pointer; }
+  .btn-reset:hover { border-color: var(--fg-dim); color: var(--fg); }
+  @media (max-width: 768px) {
+    .persona-card { grid-template-columns: 1fr; gap: 16px; }
+    .persona-mindset { min-width: unset; }
+    .total-score-card { flex-direction: column; text-align: center; gap: 20px; }
+    .top-bar { flex-direction: column; gap: 12px; align-items: flex-start; }
+    .qa-header { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-atmosphere"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+<div class="bg-grid"></div>
+
+<div class="app-container">
+
+  <header class="top-bar">
+    <div class="logo-area">
+      <div class="logo-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="logo-text">家长答疑 <span>考核评分</span></div>
+    </div>
+    <div class="badge"><i class="fas fa-clipboard-check" style="margin-right:5px"></i> 编程规划 · 学习路线 · 赛考政策</div>
+  </header>
+
+  <section class="persona-card">
+    <div class="persona-avatar"><i class="fas fa-user-tie"></i></div>
+    <div class="persona-info">
+      <h3>上海家长 · 张先生 <span class="tag">模拟角色</span></h3>
+      <div class="persona-tags">
+        <span><i class="fas fa-map-marker-alt" style="margin-right:4px;color:var(--accent)"></i>上海浦东</span>
+        <span><i class="fas fa-baby" style="margin-right:4px;color:var(--accent)"></i>孩子7岁 · 二年级</span>
+        <span><i class="fas fa-graduation-cap" style="margin-right:4px;color:var(--accent)"></i>本科以上 · 互联网行业</span>
+        <span><i class="fas fa-school" style="margin-right:4px;color:var(--accent)"></i>公办小学 · 对口公办初中</span>
+      </div>
+      <p class="persona-desc">孩子在浦东公办小学读二年级，已报英语和数学课外班。同事家孩子在学Python，家长有比较焦虑。对"图形化→Python→C++"路线只听过概念但不理解为什么不能直接学代码。关注路线的每一步时间节点、什么时候能出成绩、以及上海的升学政策到底认不认编程证书。</p>
+    </div>
+    <div class="persona-mindset">
+      <h4><i class="fas fa-brain" style="margin-right:5px"></i>核心心理</h4>
+      <ul>
+        <li>同事孩子已学Python，有"落后感"</li>
+        <li>觉得图形化"不是真编程"</li>
+        <li>想知道每个阶段到底多长</li>
+        <li>公办对口，编程证书有没有用</li>
+        <li>对CSP-J/S、信奥赛只听过名词</li>
+        <li>需要时间节点才能做家庭决策</li>
+        <li>反感被忽悠，要听实话</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="qa-section">
+
+    <div class="qa-card">
+      <div class="qa-header">
+        <div class="qa-number">1</div>
+        <div class="qa-question">
+          <div class="label">家长提问</div>
+          <div class="text">"我看你们课程是从图形化编程开始的，但我同事家孩子三年级已经在学Python了。我们家二年级是不是起步太晚了？而且图形化拖拖拽拽的，这算真正的编程吗？什么时候才能学到写代码？"</div>
+          <div class="scene"><i class="fas fa-theater-masks" style="margin-right:4px"></i>场景：家长在了解课程体系时看到路线图，指着图形化阶段直接提问，语气里有比较焦虑。</div>
+          <div class="focus-tags"><span>年龄年级适配</span><span>图形化定位</span><span>对比焦虑</span><span>过渡时机</span></div>
+        </div>
+      </div>
+      <div class="qa-body">
+        <label for="answer1">学员回答内容</label>
+        <textarea id="answer1" placeholder="请输入学员对此问题的回答内容..." oninput="document.getElementById('count1').textContent=this.value.length+' 字'"></textarea>
+        <div class="char-count" id="count1">0 字</div>
+      </div>
+    </div>
+
+    <div class="qa-card">
+      <div class="qa-header">
+        <div class="qa-number">2</div>
+        <div class="qa-question">
+          <div class="label">家长提问</div>
+          <div class="text">"你们说的图形化、Python、C++这个路线，每个阶段到底要学多久？我家孩子现在二年级开始的话，几年级能学到C++？什么时候能开始参加比赛拿证？你给我一个具体的时间线，我好跟家里商量。"</div>
+          <div class="scene"><i class="fas fa-theater-masks" style="margin-right:4px"></i>场景：家长在咨询中段，明显是"做决策前最后一个关键问题"，拿出手机准备记，要的是一个可执行的时间规划。</div>
+          <div class="focus-tags"><span>学习规划</span><span>阶段时长</span><span>年级节点</span><span>赛事起步</span></div>
+        </div>
+      </div>
+      <div class="qa-body">
+        <label for="answer2">学员回答内容</label>
+        <textarea id="answer2" placeholder="请输入学员对此问题的回答内容..." oninput="document.getElementById('count2').textContent=this.value.length+' 字'"></textarea>
+        <div class="char-count" id="count2">0 字</div>
+      </div>
+    </div>
+
+    <div class="qa-card">
+      <div class="qa-header">
+        <div class="qa-number">3</div>
+        <div class="qa-question">
+          <div class="label">家长提问</div>
+          <div class="text">"我上网查了，说上海小升初看'综评'，还有什么CSP-J认证、白名单赛事、信奥赛。这些东西跟我们学编程到底是什么关系？我们家对口的是公办初中，这些证书到底有没有用？我需要你给我说清楚，不然我没法跟家里交代。"</div>
+          <div class="scene"><i class="fas fa-theater-masks" style="margin-right:4px"></i>场景：家长在咨询结尾，手机里打开了搜索结果，语气很直接——这是他回去跟老婆商量的"决策依据"，答不好直接流失。</div>
+          <div class="focus-tags"><span>上海升学政策</span><span>综评体系</span><span>CSP-J/信奥赛</span><span>公办初中现实</span></div>
+        </div>
+      </div>
+      <div class="qa-body">
+        <label for="answer3">学员回答内容</label>
+        <textarea id="answer3" placeholder="请输入学员对此问题的回答内容..." oninput="document.getElementById('count3').textContent=this.value.length+' 字'"></textarea>
+        <div class="char-count" id="count3">0 字</div>
+      </div>
+    </div>
+
+  </section>
+
+  <div id="inlineAlert"></div>
+
+  <div class="submit-area">
+    <button id="btnSubmit" type="button">
+      <i class="fas fa-star"></i>
+      开始评分
+    </button>
+    <div class="submit-hint">基于上海7岁二年级家长视角，从多维度综合打分（每题满分10分，共30分）</div>
+  </div>
+
+  <div id="resultsSection" style="display:none;">
+    <div class="total-score-card">
+      <div class="score-ring-wrapper">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="score-ring-bg" cx="70" cy="70" r="58"></circle>
+          <circle class="score-ring-fg" id="scoreRing" cx="70" cy="70" r="58" stroke-dasharray="364.42" stroke-dashoffset="364.42"></circle>
+        </svg>
+        <div class="score-ring-text">
+          <div class="num" id="totalScoreNum">0</div>
+          <div class="unit">/ 30 分</div>
+        </div>
+      </div>
+      <div class="total-info">
+        <div class="level-badge" id="levelBadge">--</div>
+        <h2 id="levelTitle">等待评分</h2>
+        <p id="levelDesc">--</p>
+      </div>
+    </div>
+    <div id="resultCards"></div>
+    <div class="reset-area">
+      <button id="btnReset" type="button"><i class="fas fa-redo"></i> 重新评分</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+
+  // ====== 评分维度数据 ======
+  var rubrics = [
+    {
+      dims: [
+        { name: '年龄年级适配解释', weight: 0.25, good: ['二年级','7岁','8岁','低龄','适龄','年龄段','认知','发育','逻辑思维','抽象','具体','符合','这个年龄','正好','黄金期','窗口期','关键期'], bad: ['越大越好','年龄无所谓','什么时候都行'] },
+        { name: '图形化编程价值阐述', weight: 0.25, good: ['计算思维','逻辑','顺序','循环','条件','算法','思想','本质','底层','核心','基础','不是拖拽而已','背后','思维训练','编程思维','思路','架构','分解','调试'], bad: ['就是玩','拖着玩','不重要','跳过也行','没图形化也行'] },
+        { name: '与Python的关系说明', weight: 0.2, good: ['过渡','衔接','自然过渡','代码','语法','打基础','铺垫','不是跳过','先理解再写','概念','迁移','相通','不能直接','直接学python反而','上来就学','拔苗助长'], bad: ['图形化没用','直接学python就行','同事可能学错了','同事孩子不行'] },
+        { name: '缓解比较焦虑', weight: 0.15, good: ['每个孩子','因人而异','进度不同','基础不同','不用焦虑','不晚','来得及','正常','大多数','体系','不是越早越好','质量','效果','学扎实'], bad: ['你同事孩子可能不行','别人家学错了','我们比他好'] },
+        { name: '过渡时机给出', weight: 0.15, good: ['三年级','四年级','半年','一年','一到两年','分级','测过','达到','标准','条件','升段','过渡期','什么时候转','评估','看进度','看掌握'], bad: [] }
+      ],
+      parentReactionGood: '这个老师讲得比较清楚，原来图形化不是"假编程"，是先学思维再学语法。同事家孩子直接学Python也不一定就好。那我先让小孩从图形化学起，什么时候能转代码到时候再看。',
+      parentReactionMid: '说得有道理，但我还是不太确定图形化到底学多久才算"够了"。你跟我说"看进度"，但我想要一个大概的时间概念，不然我没法跟老婆说。',
+      parentReactionBad: '你说的这些我理解，但你一直没回答我"到底什么时候学代码"。而且你说图形化很重要，我同事直接学Python也没见出什么问题啊，到底谁对？'
+    },
+    {
+      dims: [
+        { name: '图形化阶段时长', weight: 0.2, good: ['一年','1年','两学期','三到四个学期','6个月','1-2年','一到两年','二年级到三年级','二年级到四年级','图形化一到两年','一到三级'], bad: ['一个月','两周','很快','马上就能'] },
+        { name: 'Python阶段时长', weight: 0.2, good: ['一年','1年','1-2年','一到两年','三到五年级','四年级','五年级','语法','项目','两到三个学期','Python一到两年'], bad: ['几个月就行','很快','两个月'] },
+        { name: 'C++阶段时间节点', weight: 0.2, good: ['四下','五年级','五年级开始','四五年级','至少四年级','c++','五年级以后','不能太早','需要数学基础','四年级以后','最早四年级'], bad: ['二年级就能学c++','直接学c++','三年级学c++','越早越好'] },
+        { name: '赛事起步时间', weight: 0.2, good: ['三年级','图形化赛事','蓝桥杯','noc','白名单','四级','五年级','第一次','csp','信奥','csp-j','入门组','初赛','省赛','考级','电子学会','goc','等级考试','证书','比赛'], bad: ['马上就能比赛','现在就报名','二年级就能拿奖'] },
+        { name: '个体差异说明', weight: 0.1, good: ['因人而异','看孩子','看进度','看掌握','不是固定','灵活','调整','加速','正常','快的话','慢的话','因材施教','评估','实际'], bad: ['所有人都是这个时间','固定不变','一定'] },
+        { name: '时间线结构清晰度', weight: 0.1, good: ['二年级','三年级','四年级','五年级','六年级','时间线','路线','阶段','第一步','第二步','然后','接着','最后','流程','顺序','规划表'], bad: [] }
+      ],
+      parentReactionGood: '这个时间线很清楚，我记下来了：图形化1-2年、Python1-2年、C++五年级起步。三年级可以开始参加图形化的比赛。这样我能回去跟老婆说清楚，心里有数了。',
+      parentReactionMid: '大概听懂了每个阶段的时间，但说得有点乱，一会儿说Python一会儿说C++，没有一个从头到尾的完整时间线。我回头自己理一下。',
+      parentReactionBad: '说了半天我没听出个具体时间，"看孩子进度""因人而异"这些话说了一堆，我问的是"我家孩子二年级开始，具体几年级学到什么"，你给我一个模糊回答，我怎么跟家里交代？'
+    },
+    {
+      dims: [
+        { name: '综评体系解读', weight: 0.2, good: ['综合素质评价','综评','学生手册','记录','写实','初中','高中','纪实','电子平台','市教委','上海市','录入','社会考察','公益劳动','探究学习','综评系统'], bad: [] },
+        { name: '白名单赛事解释', weight: 0.2, good: ['教育部','白名单','合规','正规','认可','44项','35项','含金量','省市','国赛','证书','等级','蓝桥杯','noc','全国青少年','信息学','csp','非学科','公示'], bad: ['野鸡比赛','什么比赛都行','随便一个'] },
+        { name: 'CSP-J/信奥赛解读', weight: 0.2, good: ['csp-j','csp-s','csp','入门组','提高组','初赛','复赛','省一等奖','noip','noi','认证','ccf','中国计算机学会','五年级','六年级','最早','门槛','难度','省级','一等奖'], bad: ['csp很简单','随便考考','一定能过','保过'] },
+        { name: '公办初中现实分析', weight: 0.2, good: ['对口','公办','不挑','不看证书','分班考','重点班','特色班','科技班','理科班','面谈','简历','投递','校内','老师','推荐','特长','因校而异','锦上添花','敲门砖','辅助','加分项','面试','分班'], bad: ['公办初中不看','完全没用','肯定有用','一定加分','直接录取'] },
+        { name: '诚实度与边界感', weight: 0.1, good: ['不能保证','不是万能','实话','坦诚','客观','实事求是','看情况','不一定','没有绝对','因学校而异','说实话','不夸大','理性','不迷信','交个底','老实话','别被忽悠'], bad: ['肯定有用','一定加分','绝对有帮助','包你','100%'] },
+        { name: '长期升学价值', weight: 0.1, good: ['初中','高中','自招','名额分配','综评面试','中考','高考','强基','信息学','特长生','科技特长','路线','长远','初中再学就晚','提前打底','窗口期','时间差','积累','持续','体系'], bad: [] }
+      ],
+      parentReactionGood: '这个老师终于把CSP-J、白名单、综评这几个概念给我理清楚了，而且说了实话——公办对口初中不一定会看证书，但分班考和初中阶段的信奥赛是另一条路。这种分析我听得进去，回去能跟老婆讲明白。',
+      parentReactionMid: '讲了一些政策的东西，但综评和信奥赛的关系还是没完全说清楚。我问我家对口公办看不看，你说"因校而异"，能不能再具体一点？',
+      parentReactionBad: '你说的这些我网上都查到了，我要的是你告诉我"对我家孩子到底有没有用"，你说了半天"白名单""CSP-J"这些名词，但没有给我一个结论。我老婆问我"学了有什么用"，我怎么回答？'
+    }
+  ];
+
+  var penaltyPatterns = [
+    { pattern: /你们机构|我们机构|我们公司|报课|缴费|价格|多少钱|优惠|打折|活动价|原价|特价|限时|赶紧报|今天报|马上报名|交费|收费|学费|课时费/, reason: '过早切入销售/价格话术，家长还在决策阶段，显得功利', score: -1.5 },
+    { pattern: /你不懂|你不知道|你想错了|你错了|你理解有误|你搞错了/, reason: '否定家长认知，上海家长极反感被说教', score: -1.5 },
+    { pattern: /你同事孩子不行|你同事孩子学错了|别人家学错了|别人都瞎学/, reason: '贬低他人来抬高自己，适得其反', score: -1.2 }
+  ];
+
+  var bonusPatterns = [
+    { pattern: /张先生|张爸爸/, score: 0.3 },
+    { pattern: /您孩子|小朋友|宝贝/, score: 0.2 },
+    { pattern: /您看这样|您觉得|您看|我帮您|我给您/, score: 0.3 }
+  ];
+
+  // ====== 单题评分 ======
+  function scoreOne(text, rubricIndex) {
+    if (!text || text.length < 2) {
+      return { score: 0, dims: [], feedback: { good: [], bad: ['回答内容过短，无法有效评分'] }, parentReaction: rubrics[rubricIndex].parentReactionBad };
+    }
+
+    var rubric = rubrics[rubricIndex];
+    var lower = text.toLowerCase();
+    var total = 0;
+    var dims = [];
+    var gf = [], bf = [];
+
+    for (var i = 0; i < rubric.dims.length; i++) {
+      var dim = rubric.dims[i];
+      var gh = 0, bh = 0;
+
+      for (var g = 0; g < dim.good.length; g++) {
+        if (lower.indexOf(dim.good[g].toLowerCase()) !== -1) gh++;
+      }
+      for (var b = 0; b < dim.bad.length; b++) {
+        if (lower.indexOf(dim.bad[b].toLowerCase()) !== -1) bh++;
+      }
+
+      var cap = Math.min(Math.max(dim.good.length, 1), 5);
+      var ratio = Math.min(gh / cap, 1);
+      var s = ratio * dim.weight * 10;
+      if (bh > 0) s -= bh * dim.weight * 2.5;
+      if (text.length > 120) s += dim.weight * 0.4;
+      if (text.length > 250) s += dim.weight * 0.3;
+
+      var mx = dim.weight * 10;
+      s = Math.max(0, Math.min(mx, s));
+      total += s;
+
+      dims.push({ name: dim.name, weight: dim.weight, pct: Math.round(s / mx * 100), goodHits: gh, badHits: bh });
+
+      if (gh >= 3) gf.push(dim.name + '——关键词命中丰富');
+      else if (gh === 0 && dim.weight >= 0.15) bf.push('缺少"' + dim.name + '"相关内容');
+      if (bh > 0) bf.push(dim.name + '——出现不当表述');
+    }
+
+    for (var p = 0; p < penaltyPatterns.length; p++) {
+      if (penaltyPatterns[p].pattern.test(text)) { total += penaltyPatterns[p].score; bf.push(penaltyPatterns[p].reason); }
+    }
+    for (var bp = 0; bp < bonusPatterns.length; bp++) {
+      if (bonusPatterns[bp].pattern.test(text)) total += bonusPatterns[bp].score;
+    }
+
+    total = Math.round(Math.max(0, Math.min(10, total)) * 10) / 10;
+
+    if (gf.length === 0 && bf.length === 0) {
+      if (total >= 6) gf.push('整体回答较流畅，基本覆盖了家长的关切');
+      else bf.push('回答内容较薄弱，建议针对各维度要点补充');
+    }
+
+    var pr;
+    if (total >= 7.5) pr = rubric.parentReactionGood;
+    else if (total >= 4.5) pr = rubric.parentReactionMid;
+    else pr = rubric.parentReactionBad;
+
+    return { score: total, dims: dims, feedback: { good: gf, bad: bf }, parentReaction: pr };
+  }
+
+  // ====== 数字动画 ======
+  function animNum(el, from, to, dur) {
+    var st = performance.now();
+    function tick(now) {
+      var p = Math.min((now - st) / dur, 1);
+      var e = p === 1 ? 1 : 1 - Math.pow(2, -10 * p);
+      el.textContent = (from + (to - from) * e).toFixed(1);
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // ====== 渲染结果 ======
+  function render(results, total) {
+    var sec = document.getElementById('resultsSection');
+    sec.style.display = 'flex';
+
+    var circ = 2 * Math.PI * 58;
+    var pct = total / 30;
+    var ring = document.getElementById('scoreRing');
+    var rc;
+    if (total >= 24) rc = '#4ade80';
+    else if (total >= 16) rc = '#e8a849';
+    else rc = '#f87171';
+
+    ring.style.stroke = rc;
+    ring.style.strokeDashoffset = circ * (1 - pct);
+
+    var numEl = document.getElementById('totalScoreNum');
+    numEl.style.color = rc;
+    animNum(numEl, 0, total, 1200);
+
+    var badge = document.getElementById('levelBadge');
+    var ttl = document.getElementById('levelTitle');
+    var dsc = document.getElementById('levelDesc');
+    var lv, lc, lb, lt, ld;
+
+    if (total >= 25) { lv='优秀'; lc='#4ade80'; lb='rgba(74,222,128,0.12)'; lt='家长会心动，愿意进一步了解'; ld='回答精准、路线清晰、政策解读到位，同时保持了诚实边界感。从上海家长的视角看，能有效打消顾虑，甚至主动想要试听或报名。学员具备成熟的编程规划类家长沟通能力。'; }
+    else if (total >= 21) { lv='良好'; lc='#a3e635'; lb='rgba(163,230,53,0.1)'; lt='家长觉得还不错，大概率试听'; ld='回答整体质量不错，关键点覆盖较全，但在某些细节上不够深入。家长大概率愿意试听，但可能还有后续追问。'; }
+    else if (total >= 16) { lv='合格'; lc='#e8a849'; lb='rgba(232,168,73,0.15)'; lt='家长将信将疑，说"再考虑"'; ld='回答有基本框架，但存在明显短板：要么路线讲不清时间节点、要么政策分析太笼统、要么缺少诚实度。家长大概率说"我再想想"。'; }
+    else if (total >= 10) { lv='待提升'; lc='#fb923c'; lb='rgba(251,146,60,0.1)'; lt='家长觉得不专业，可能流失'; ld='回答存在较大问题：路线时间线模糊、政策概念混淆、或者夸大承诺。建议重点复盘学习路线和政策解读话术。'; }
+    else { lv='不合格'; lc='#f87171'; lb='rgba(248,113,113,0.1)'; lt='家长会直接拒绝，严重流失'; ld='回答严重偏离要求：内容过短、出现严重话术错误、完全未回应家长关切。需要从基础知识重新培训。'; }
+
+    badge.textContent = lv;
+    badge.style.background = lb;
+    badge.style.color = lc;
+    ttl.textContent = lt;
+    ttl.style.color = lc;
+    dsc.textContent = ld;
+
+    var titles = ['图形化起步 vs Python焦虑', '学习路线时间线 + 赛事起步', '上海升学政策 + CSP/信奥赛'];
+    var box = document.getElementById('resultCards');
+    box.innerHTML = '';
+
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      var sc;
+      if (r.score >= 7.5) sc = '#4ade80';
+      else if (r.score >= 5) sc = '#e8a849';
+      else sc = '#f87171';
+
+      var dh = '';
+      for (var j = 0; j < r.dims.length; j++) {
+        var d = r.dims[j];
+        var bc;
+        if (d.pct >= 70) bc = '#4ade80';
+        else if (d.pct >= 40) bc = '#e8a849';
+        else bc = '#f87171';
+        dh += '<div class="dimension-row"><div class="dim-label"><span class="name">' + d.name + '（权重' + Math.round(d.weight*100) + '%）</span><span class="val" style="color:' + bc + '">' + d.pct + '%</span></div><div class="dim-bar"><div class="dim-bar-fill" style="background:' + bc + '" data-w="' + d.pct + '%"></div></div></div>';
+      }
+
+      var fh = '';
+      if (r.feedback.good.length > 0) fh += '<div class="feedback-box good"><div class="fb-title"><i class="fas fa-check-circle"></i> 亮点</div>' + r.feedback.good.join('<br>') + '</div>';
+      if (r.feedback.bad.length > 0) fh += '<div class="feedback-box bad"><div class="fb-title"><i class="fas fa-times-circle"></i> 问题</div>' + r.feedback.bad.join('<br>') + '</div>';
+
+      box.innerHTML += '<div class="result-card open"><div class="result-card-header" data-idx="' + i + '"><div class="q-num" style="background:' + sc + '22;color:' + sc + '">' + (i+1) + '</div><div class="q-title">' + titles[i] + '</div><div class="q-score" style="color:' + sc + '">' + r.score + '<span>/10</span></div><div class="toggle-icon"><i class="fas fa-chevron-down"></i></div></div><div class="result-card-body"><div class="result-card-content">' + dh + fh + '<div class="parent-reaction"><div class="pr-title"><i class="fas fa-user-tie"></i> 家长内心OS</div><div class="pr-text">"' + r.parentReaction + '"</div></div></div></div></div>';
+    }
+
+    // 延迟启动条形图
+    setTimeout(function() {
+      var bars = document.querySelectorAll('.dim-bar-fill');
+      for (var k = 0; k < bars.length; k++) {
+        bars[k].style.width = bars[k].getAttribute('data-w');
+      }
+    }, 200);
+
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ====== 主评分入口 ======
+  function doEvaluate() {
+    var btn = document.getElementById('btnSubmit');
+
+    // 立即改变按钮文字 — 让用户100%知道点击生效了
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 评分中...';
+    btn.disabled = true;
+
+    var alertBox = document.getElementById('inlineAlert');
+    alertBox.style.display = 'none';
+
+    var a1 = document.getElementById('answer1').value.trim();
+    var a2 = document.getElementById('answer2').value.trim();
+    var a3 = document.getElementById('answer3').value.trim();
+
+    // 如果三个都是空的，给提示但不阻止（给0分结果）
+    if (a1.length === 0 && a2.length === 0 && a3.length === 0) {
+      alertBox.style.display = 'block';
+      alertBox.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right:8px"></i>三个回答都是空的，请先填写学员的回答内容后再评分';
+      btn.innerHTML = '<i class="fas fa-star"></i> 开始评分';
+      btn.disabled = false;
+      return;
+    }
+
+    try {
+      var r1 = scoreOne(a1, 0);
+      var r2 = scoreOne(a2, 1);
+      var r3 = scoreOne(a3, 2);
+      var total = Math.round((r1.score + r2.score + r3.score) * 10) / 10;
+      render([r1, r2, r3], total);
+    } catch(err) {
+      // 最后兜底：用alert确保用户一定能看到
+      alert('评分过程出现错误：' + err.message + '\n\n请尝试刷新页面后重试。');
+    }
+
+    btn.innerHTML = '<i class="fas fa-star"></i> 开始评分';
+    btn.disabled = false;
+  }
+
+  // ====== 折叠切换 ======
+  function doToggle(headerEl) {
+    var card = headerEl.parentElement;
+    if (card.classList.contains('open')) {
+      card.classList.remove('open');
+    } else {
+      card.classList.add('open');
+    }
+  }
+
+  // ====== 重置 ======
+  function doReset() {
+    document.getElementById('answer1').value = '';
+    document.getElementById('answer2').value = '';
+    document.getElementById('answer3').value = '';
+    document.getElementById('count1').textContent = '0 字';
+    document.getElementById('count2').textContent = '0 字';
+    document.getElementById('count3').textContent = '0 字';
+    document.getElementById('inlineAlert').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('scoreRing').style.strokeDashoffset = '364.42';
+    document.getElementById('totalScoreNum').textContent = '0';
+    window.scrollTo(0, 0);
+  }
+
+  // ====== 绑定事件（不用onclick属性，用addEventListener） ======
+  document.getElementById('btnSubmit').addEventListener('click', doEvaluate);
+  document.getElementById('btnReset').addEventListener('click', doReset);
+
+  // 折叠用事件委托
+  document.getElementById('resultCards').addEventListener('click', function(e) {
+    var header = e.target.closest('.result-card-header');
+    if (header) doToggle(header);
+  });
+
+})();
+</script>
+
+</body>
+</html>
